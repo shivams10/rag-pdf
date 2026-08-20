@@ -7,6 +7,9 @@ import {
   LANGCHAIN_COLLECTION_NAME,
   LANGCHAIN_EMBEDDING_MODEL,
   LANGCHAIN_GENERATION_MODEL,
+  LANGCHAIN_CHUNK_SIZE,
+  LANGCHAIN_CHUNK_OVERLAP,
+  LANGCHAIN_RETRIEVER_TOP_K,
 } from "../constants/index.js";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
@@ -18,12 +21,18 @@ import {
 } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
+const qdrantConfig = {
+  url: QDRANT_URL,
+  apiKey: QDRANT_API_KEY,
+  collectionName: LANGCHAIN_COLLECTION_NAME,
+};
+
 const embeddings = new GoogleGenerativeAIEmbeddings({
   apiKey: GOOGLE_API_KEY,
   model: LANGCHAIN_EMBEDDING_MODEL,
 });
 
-const model = new ChatGoogleGenerativeAI({
+const chatModel = new ChatGoogleGenerativeAI({
   apiKey: GOOGLE_API_KEY,
   model: LANGCHAIN_GENERATION_MODEL,
 });
@@ -35,45 +44,54 @@ const prompt = ChatPromptTemplate.fromTemplate(`
 
     Question:
     {question}
-    `);
+  `);
+
+const formatDocs = (docs) =>
+  docs.map(({ pageContent }) => pageContent).join("\n\n");
 
 export async function ingestPdf(filePath) {
   const docs = await new PDFLoader(filePath).load();
   const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1000,
-    chunkOverlap: 200,
+    chunkSize: LANGCHAIN_CHUNK_SIZE,
+    chunkOverlap: LANGCHAIN_CHUNK_OVERLAP,
   });
   const chunks = await splitter.splitDocuments(docs);
-  await QdrantVectorStore.fromDocuments(chunks, embeddings, {
-    url: QDRANT_URL,
-    apiKey: QDRANT_API_KEY,
-    collectionName: LANGCHAIN_COLLECTION_NAME,
-  });
+  await QdrantVectorStore.fromDocuments(chunks, embeddings, qdrantConfig);
 }
 
-export async function answerQuestion(question) {
+// Cached so each question doesn't reconnect to Qdrant and rebuild the chain;
+// the retriever still queries Qdrant live, so newly ingested docs are picked up.
+let ragChainPromise = null;
+
+async function buildRagChain() {
   const vectorStore = await QdrantVectorStore.fromExistingCollection(
     embeddings,
-    {
-      url: QDRANT_URL,
-      apiKey: QDRANT_API_KEY,
-      collectionName: LANGCHAIN_COLLECTION_NAME,
-    },
+    qdrantConfig,
   );
-  const retriever = vectorStore.asRetriever({
-    k: 3,
-  });
+  const retriever = vectorStore.asRetriever({ k: LANGCHAIN_RETRIEVER_TOP_K });
 
-  const formatDocs = (docs) =>
-    docs.map((item) => item.pageContent).join("\n\n");
-  const chain = RunnableSequence.from([
+  return RunnableSequence.from([
     {
       context: retriever.pipe(formatDocs),
       question: new RunnablePassthrough(),
     },
     prompt,
-    model,
+    chatModel,
     new StringOutputParser(),
   ]);
+}
+
+function getRagChain() {
+  if (!ragChainPromise) {
+    ragChainPromise = buildRagChain().catch((err) => {
+      ragChainPromise = null;
+      throw err;
+    });
+  }
+  return ragChainPromise;
+}
+
+export async function answerQuestion(question) {
+  const chain = await getRagChain();
   return chain.invoke(question);
 }

@@ -5,3 +5,6 @@ export const GENERATION_MODEL = "gemini-3.5-flash-lite";
 export const LANGCHAIN_COLLECTION_NAME = "pdf-docs-langchain";
 export const LANGCHAIN_EMBEDDING_MODEL = "gemini-embedding-2";
 export const LANGCHAIN_GENERATION_MODEL = "gemini-3.5-flash-lite";
+export const LANGCHAIN_CHUNK_SIZE = 1000;
+export const LANGCHAIN_CHUNK_OVERLAP = 200;
+export const LANGCHAIN_RETRIEVER_TOP_K = 3;
