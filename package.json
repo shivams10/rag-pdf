@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/shivams10/rag-pdf#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1116.0",
     "@google/genai": "^2.16.0",
     "@langchain/community": "^1.1.29",
     "@langchain/core": "^1.2.8",

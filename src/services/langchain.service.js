@@ -20,6 +20,7 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { getPdfBufferFromS3 } from "./s3.service.js";
 
 const qdrantConfig = {
   url: QDRANT_URL,
@@ -49,8 +50,9 @@ const prompt = ChatPromptTemplate.fromTemplate(`
 const formatDocs = (docs) =>
   docs.map(({ pageContent }) => pageContent).join("\n\n");
 
-export async function ingestPdf(filePath) {
-  const docs = await new PDFLoader(filePath).load();
+export async function ingestPdf(s3Key) {
+  const buffer = await getPdfBufferFromS3(s3Key)
+  const docs = await new PDFLoader(new Blob([buffer])).load();
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: LANGCHAIN_CHUNK_SIZE,
     chunkOverlap: LANGCHAIN_CHUNK_OVERLAP,
