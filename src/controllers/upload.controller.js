@@ -16,7 +16,7 @@ export async function uploadPdfAndAnswer(req, res) {
     return res.status(400).send("Missing 'question' field");
   }
 
-  const text = await extractTextFromPdf(req.file.path);
+  const text = await extractTextFromPdf(req.file.buffer);
   const chunks = chunkText(text);
 
   const chunkEmbeddings = [];
