@@ -11,7 +11,7 @@ export async function uploadPdfAndAnswerLangChain(req, res) {
     return res.status(400).send("Missing question");
   }
 
-  const uuid = crypto.randomUUID;
+  const uuid = crypto.randomUUID();
   const s3Key = `uploads/${uuid}-${req.file.originalname}`;
   await uploadPdfTos3(s3Key, req.file.buffer, req.file.mimetype);
   await ingestPdf(s3Key);
