@@ -9,6 +9,9 @@ export const upload = multer({
     const isPdf =
       file.mimetype === "application/pdf" &&
       file.originalname.toLowerCase().endsWith(".pdf");
-    cb(isPdf ? null : new Error("Only PDF files are allowed"));
+    if (!isPdf) {
+      return cb(new Error("Only PDF files are allowed"));
+    }
+    cb(null, true);
   },
 });
