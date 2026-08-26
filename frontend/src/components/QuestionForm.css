@@ -1,0 +1,50 @@
+.question-form {
+  position: sticky;
+  bottom: 20px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+
+.question-form__input {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  padding: 8px 10px;
+  max-height: 140px;
+}
+
+.question-form__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.question-form__submit {
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: white;
+  background: var(--color-accent);
+  transition: background-color 150ms ease;
+}
+
+.question-form__submit:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.question-form__submit:disabled {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+}
