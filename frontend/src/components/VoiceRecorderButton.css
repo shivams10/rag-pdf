@@ -1,0 +1,51 @@
+.voice-recorder {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.voice-recorder__button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface-muted);
+  font-size: 1.05rem;
+  line-height: 1;
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.voice-recorder__button:hover:not(:disabled) {
+  background: var(--color-accent-soft);
+}
+
+.voice-recorder__button--recording {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  animation: voice-recorder-pulse 1200ms ease-in-out infinite;
+}
+
+.voice-recorder__error {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin: 0 0 6px;
+  padding: 6px 10px;
+  width: max-content;
+  max-width: 220px;
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: 0.75rem;
+}
+
+@keyframes voice-recorder-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}

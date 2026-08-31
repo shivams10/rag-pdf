@@ -11,6 +11,7 @@ export default defineConfig({
       '/lc': BACKEND_URL,
       '/upload': BACKEND_URL,
       '/collection': BACKEND_URL,
+      '/stt': BACKEND_URL,
     },
   },
 })
