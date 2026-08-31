@@ -12,8 +12,7 @@ The project is split into three independently-run pieces:
 rag-pdf/
 ├── src/              Node/Express API — PDF upload, RAG pipeline, Q&A
 ├── frontend/          React + Vite UI — upload, chat, voice input
-├── voice-service/    Python/FastAPI sidecar — Whisper speech-to-text
-└── docs/             Design notes (see whisper-kokoro-voice-integration-plan.md)
+└── voice-service/    Python/FastAPI sidecar — Whisper speech-to-text
 ```
 
 ```
@@ -121,17 +120,11 @@ the frontend talks to it only through the Node backend's `/stt` route.
 
 ## Screenshots
 
-_Add your own screenshots here once the app is running — drop image files into
-`docs/screenshots/` and reference them below, e.g.:_
+![PDF uploaded and a question answered from its content](screenshots/image.png)
 
-```markdown
-![Upload screen](docs/screenshots/upload.png)
-![Voice question in progress](docs/screenshots/voice-recording.png)
-![Answer returned](docs/screenshots/answer.png)
-```
+_Add more screenshots to `screenshots/` and reference them here as needed, e.g. the upload screen or the voice recording flow._
 
 ## Known limitations
 
 - Ingestion and Q&A are coupled — every question re-uploads and re-ingests the same PDF (no "upload once, ask many" flow yet)
 - Text-to-speech (Kokoro) is planned but not yet wired up — voice currently only covers speech-to-text
-- See [`docs/whisper-kokoro-voice-integration-plan.md`](docs/whisper-kokoro-voice-integration-plan.md) for the full voice integration design and roadmap
