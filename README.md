@@ -122,7 +122,6 @@ the frontend talks to it only through the Node backend's `/stt` route.
 
 ![PDF uploaded and a question answered from its content](screenshots/image.png)
 
-_Add more screenshots to `screenshots/` and reference them here as needed, e.g. the upload screen or the voice recording flow._
 
 ## Known limitations
 
