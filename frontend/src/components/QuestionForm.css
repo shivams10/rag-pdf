@@ -1,6 +1,12 @@
-.question-form {
+.question-form-wrapper {
   position: sticky;
   bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.question-form {
   display: flex;
   align-items: flex-end;
   gap: 10px;
@@ -9,6 +15,13 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
+}
+
+.question-form__error {
+  margin: 0;
+  padding: 0 4px;
+  font-size: 0.8rem;
+  color: var(--color-danger);
 }
 
 .question-form__input {

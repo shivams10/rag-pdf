@@ -15,6 +15,6 @@ export async function uploadPdfAndAnswerLangChain(req, res) {
   const s3Key = `uploads/${uuid}-${req.file.originalname}`;
   await uploadPdfTos3(s3Key, req.file.buffer, req.file.mimetype);
   await ingestPdf(s3Key);
-  const answer = await answerQuestion(question);
+  const answer = await answerQuestion(question, s3Key);
   res.send(answer);
 }

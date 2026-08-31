@@ -58,21 +58,48 @@ export async function ingestPdf(s3Key) {
     chunkOverlap: LANGCHAIN_CHUNK_OVERLAP,
   });
   const chunks = await splitter.splitDocuments(docs);
+  chunks.forEach((chunk) => {
+    chunk.metadata.documentId = s3Key;
+  });
   await QdrantVectorStore.fromDocuments(chunks, embeddings, qdrantConfig);
 }
 
-// Cached so each question doesn't reconnect to Qdrant and rebuild the chain;
-// the retriever still queries Qdrant live, so newly ingested docs are picked up.
-let ragChainPromise = null;
+// Cached so each question doesn't reconnect to Qdrant; the retriever filter
+// (scoped per-document below) is what keeps answers isolated per PDF.
+let vectorStorePromise = null;
 
-async function buildRagChain() {
-  const vectorStore = await QdrantVectorStore.fromExistingCollection(
-    embeddings,
-    qdrantConfig,
-  );
-  const retriever = vectorStore.asRetriever({ k: LANGCHAIN_RETRIEVER_TOP_K });
+function getVectorStore() {
+  if (!vectorStorePromise) {
+    vectorStorePromise = (async () => {
+      const vectorStore = await QdrantVectorStore.fromExistingCollection(
+        embeddings,
+        qdrantConfig,
+      );
+      // Qdrant Cloud requires an explicit index before a field can be used
+      // in a filter; this is a no-op if the index already exists.
+      await vectorStore.client.createPayloadIndex(
+        qdrantConfig.collectionName,
+        { field_name: "metadata.documentId", field_schema: "keyword" },
+      );
+      return vectorStore;
+    })().catch((err) => {
+      vectorStorePromise = null;
+      throw err;
+    });
+  }
+  return vectorStorePromise;
+}
 
-  return RunnableSequence.from([
+export async function answerQuestion(question, documentId) {
+  const vectorStore = await getVectorStore();
+  const retriever = vectorStore.asRetriever({
+    k: LANGCHAIN_RETRIEVER_TOP_K,
+    filter: {
+      must: [{ key: "metadata.documentId", match: { value: documentId } }],
+    },
+  });
+
+  const chain = RunnableSequence.from([
     {
       context: retriever.pipe(formatDocs),
       question: new RunnablePassthrough(),
@@ -81,19 +108,6 @@ async function buildRagChain() {
     chatModel,
     new StringOutputParser(),
   ]);
-}
 
-function getRagChain() {
-  if (!ragChainPromise) {
-    ragChainPromise = buildRagChain().catch((err) => {
-      ragChainPromise = null;
-      throw err;
-    });
-  }
-  return ragChainPromise;
-}
-
-export async function answerQuestion(question) {
-  const chain = await getRagChain();
   return chain.invoke(question);
 }

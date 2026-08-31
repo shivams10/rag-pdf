@@ -33,6 +33,25 @@ export async function askQuestionAboutPdf(file: File, question: string): Promise
   return raw
 }
 
+export async function transcribeAudio(audioBlob: Blob): Promise<string> {
+  const formData = new FormData()
+  formData.append('audio', audioBlob, 'recording.webm')
+
+  const response = await fetch('/stt', {
+    method: 'POST',
+    body: formData,
+  })
+
+  const raw = await response.text()
+
+  if (!response.ok) {
+    throw new ApiError(extractErrorMessage(raw, response.status))
+  }
+
+  const data = JSON.parse(raw) as { transcript: string }
+  return data.transcript
+}
+
 function extractErrorMessage(raw: string, status: number): string {
   try {
     const parsed = JSON.parse(raw)
